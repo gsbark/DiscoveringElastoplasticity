@@ -1,0 +1,21 @@
+##########################
+# units : mm, N, MPa, ms, g 
+##########################
+
+MPM_config:
+  n_grid : 32
+  l_edge : 7.0
+  particles: 8960
+  p_rho : 5.0e-3
+Material:
+  E : 50000.0                      
+  n : 0.3
+Analysis_config:
+  dt : 2.0e-6
+  steps : 1000           
+Geometry: 
+  r_theta: 45 
+  radius: 1.2
+  length_x: 3.0
+  length_y: 1.0
+  length_z: 5.0
