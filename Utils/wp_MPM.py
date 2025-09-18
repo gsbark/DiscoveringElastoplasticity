@@ -66,6 +66,75 @@ class MPM_state:
       self.reset_grid()
 
 @wp.struct
+class MPM_state_hard:
+   
+   x: wp.array2d(dtype=wp.vec3f)          #type:ignore
+   v: wp.array2d(dtype=wp.vec3f)          #type:ignore
+   F: wp.array2d(dtype=wp.mat33f)         #type:ignore
+   L: wp.array2d(dtype=wp.mat33f)         #type:ignore
+   stress:wp.array2d(dtype=wp.mat33f)     #type:ignore
+   log_e:wp.array2d(dtype=wp.mat33f)      #type:ignore
+
+   gamma:wp.array2d(dtype=wp.float32)     #type:ignore
+   theta:wp.array2d(dtype=wp.float32)     #type:ignore
+   flag:wp.array2d(dtype=wp.float32)      #type:ignore
+
+   grid_v: wp.array4d(dtype=wp.vec3f)     #type:ignore
+   grid_mv: wp.array4d(dtype=wp.vec3f)    #type:ignore
+   grid_m: wp.array4d(dtype=wp.float32)   #type:ignore
+
+   def initialize(self,steps:int,n_grid:int,num_particles:int,requires_grad:bool,device):
+
+      self.x = wp.zeros(shape=(steps,num_particles),dtype=wp.vec3f,requires_grad=requires_grad,device=device)
+      self.v = wp.zeros(shape=(steps,num_particles),dtype=wp.vec3f,requires_grad=requires_grad,device=device)
+      self.F = wp.zeros(shape=(steps,num_particles),dtype=wp.mat33f,requires_grad=requires_grad,device=device)
+      self.L = wp.zeros(shape=(steps,num_particles),dtype=wp.mat33f,requires_grad=requires_grad,device=device)
+      self.stress = wp.zeros(shape=(steps,num_particles),dtype=wp.mat33f,requires_grad=requires_grad,device=device)
+      self.log_e = wp.zeros(shape=(steps,num_particles),dtype=wp.mat33f,requires_grad=requires_grad,device=device)
+      
+      self.gamma =  wp.zeros(shape=(steps,num_particles),dtype=wp.float32,requires_grad=requires_grad,device=device)
+      self.theta =  wp.zeros(shape=(steps,num_particles),dtype=wp.float32,requires_grad=requires_grad,device=device)
+      self.flag = wp.zeros(shape=(steps,num_particles),dtype=wp.float32,requires_grad=requires_grad,device=device)
+
+      self.grid_v = wp.zeros(shape=(steps,n_grid,n_grid,n_grid),dtype=wp.vec3f,requires_grad=requires_grad,device=device)
+      self.grid_mv = wp.zeros(shape=(steps,n_grid,n_grid,n_grid),dtype=wp.vec3f,requires_grad=requires_grad,device=device)
+      self.grid_m = wp.zeros(shape=(steps,n_grid,n_grid,n_grid),dtype=wp.float32,requires_grad=requires_grad,device=device)
+   
+   def reset_particles(self):
+      
+      self.x.zero_()
+      self.v.zero_()
+      self.F.zero_()
+      self.L.zero_()
+      self.stress.zero_()
+      self.log_e.zero_()
+      self.flag.zero_()   
+      self.gamma.zero_()
+
+   def reset_grid(self):
+      self.grid_v.zero_()
+      self.grid_m.zero_()
+      self.grid_mv.zero_()
+
+   def reset_substeps(self,steps):
+      self.x[0].assign(self.x[-1])
+      self.v[0].assign(self.v[-1])
+      self.F[0].assign(self.F[-1])
+      self.L[0].assign(self.L[-1])
+      self.stress[0].assign(self.stress[-1])
+      self.log_e[0].assign(self.log_e[-1])
+      self.gamma[0].assign(self.gamma[-1])
+      for i in range(1,steps):
+         self.x[i].zero_()
+         self.v[i].zero_()
+         self.F[i].zero_()
+         self.L[i].zero_()
+         self.stress[i].zero_()
+         self.log_e[i].zero_()
+         self.gamma[i].zero_()
+      self.reset_grid()    
+
+@wp.struct
 class MPM_vars:
 
    inv_dx:wp.float32
@@ -112,7 +181,7 @@ class MPM_vars:
       self.K  = float(self.E/(3.0*(1.0-2.0*self.n)))
       
 class wp_MLP:
-   def __init__(self,params:Tensor,batch:int,steps:int,device,w_norm:bool):
+   def __init__(self,params:Tensor,batch:int,steps:int,device):
       
       self.w1 = wp.array(params['layers.0.weight'].numpy(),dtype=wp.float32,requires_grad=True,device=device)
       self.b1 = wp.array(params['layers.0.bias'].numpy(),dtype=wp.float32,requires_grad=True,device=device)

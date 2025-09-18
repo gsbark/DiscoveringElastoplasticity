@@ -12,7 +12,8 @@ Material:
   n : 0.3
 Analysis_config:
   dt : 2.0e-6
-  steps : 1000           
+  steps : 1000
+  Hardening : True           
 Geometry: 
   r_theta: 45 
   radius: 1.2

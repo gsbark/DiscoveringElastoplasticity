@@ -1,5 +1,5 @@
 import warp as wp 
-from wp_MPM import MPM_vars
+from Utils.wp_MPM import MPM_vars
 
 
 @wp.kernel
@@ -65,7 +65,7 @@ def grid_update(MPM:MPM_vars,
       grid_v[i,j,k][2] = wp.float32(0.0)
 
    if dist_z > wp.float32(0.8) * MPM.l_edge: 
-      grid_v[i,j,k][0] = wp.float32(-20.0)
+      grid_v[i,j,k][0] = wp.float32(-50.0)
       grid_v[i,j,k][1] = wp.float32(0.0)
       grid_v[i,j,k][2] = wp.float32(0.0)
 

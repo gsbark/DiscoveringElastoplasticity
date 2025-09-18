@@ -1,7 +1,6 @@
 import numpy as np 
 import torch
 import vtk
-from NN_train.train import MLP
 from Utils.wp_MPM import MPM_state
 
 def get_s_vm(sigma):
@@ -46,7 +45,6 @@ def GaussPoints_export(Particles:np.ndarray,Val:np.ndarray,inc:int,fname:str,nam
    writer.SetInputData(polydata)
    writer.Write()
 
-
 def save_error_state(field:MPM_state,x_true,i_frame:int,folder:str):
    '''
    Particle theta-displacement error
@@ -73,20 +71,43 @@ def save_state(field:MPM_state,x0,i_frame:int,folder:str,index=0):
    GaussPoints_export(field.x[index].numpy(),field_data,i_frame,fname=folder,name='mat_points')
 #--------------------------------------------------------
 
-def find_YF(wp_mlp,w_norm,scale_inp,scale_out,num):
+class MLP(torch.nn.Module):
+   def __init__(self,hidden_size):
+      super().__init__()
+      self.layers = torch.nn.ModuleList()
+      self.layers_num = len(hidden_size)-1
+      for i in range(self.layers_num):
+         self.layers.append(torch.nn.Linear(hidden_size[i],hidden_size[i+1]))
+         if i != self.layers_num - 1:
+            self.layers.append(torch.nn.ELU())      
+   def forward(self, x):
+      for layer in self.layers:
+         x = layer(x)
+      return x
    
-   model = MLP(hidden_size=[2,64,64,1])
+def find_YF(wp_mlp,Hardening,scale_inp,scale_out,num):
+   
+   theta = np.linspace(0,2*np.pi,num)
+   if Hardening:
+      dim = 3
+      pl_lvls = 5
+      rhoNN = np.zeros(theta.shape[0]*pl_lvls)
+   else:
+      dim = 2
+      rhoNN = np.zeros(theta.shape[0])
+
+   model = MLP(hidden_size=[dim,64,64,1])
    scale_x = torch.tensor(scale_inp.numpy())
    scale_y = torch.tensor(scale_out.numpy())
 
-   if w_norm: 
-      w1 = wp_mlp.w1_scaled.numpy()
-      w2 = wp_mlp.w2_scaled.numpy()
-      w3 = wp_mlp.w3_scaled.numpy()
-   else:
-      w1 = wp_mlp.w1.numpy()
-      w2 = wp_mlp.w2.numpy()
-      w3 = wp_mlp.w3.numpy()
+   # if w_norm: 
+   #    w1 = wp_mlp.w1_scaled.numpy()
+   #    w2 = wp_mlp.w2_scaled.numpy()
+   #    w3 = wp_mlp.w3_scaled.numpy()
+   # else:
+   w1 = wp_mlp.w1.numpy()
+   w2 = wp_mlp.w2.numpy()
+   w3 = wp_mlp.w3.numpy()
 
    model.layers[0].weight.data = torch.tensor(w1)
    model.layers[0].bias.data = torch.tensor(wp_mlp.b1.numpy())
@@ -95,14 +116,18 @@ def find_YF(wp_mlp,w_norm,scale_inp,scale_out,num):
    model.layers[4].weight.data = torch.tensor(w3)
    model.layers[4].bias.data = torch.tensor(wp_mlp.b3.numpy())
    
-   theta = np.linspace(0,2*np.pi,num)
-   rhoNN = np.zeros(theta.shape[0])
-
    def NR_solve(fun,x):
       eps = 1e-3
       while abs(fun(x[0],x[1])) > 1e-3:
          df_dx  = (fun(x[0]+eps,x[1]) - fun(x[0],x[1]))/(eps)
          x[0] = x[0] - fun(x[0],x[1])/df_dx
+      return x[0]
+   
+   def NR_solve_hard(fun,x):
+      eps = 1e-3
+      while abs(fun(x[0],x[1],x[2])) > 1e-3:
+         df_dx  = (fun(x[0]+eps,x[1],x[2]) - fun(x[0],x[1],x[2]))/(eps)
+         x[0] = x[0] - fun(x[0],x[1],x[2])/df_dx
       return x[0]
    
    def YF_NN(rho,theta):
@@ -111,9 +136,27 @@ def find_YF(wp_mlp,w_norm,scale_inp,scale_out,num):
       with torch.no_grad():
          out = model(data*scale_x)*scale_y
       return out.numpy()
+   
+   def YF_NN_hard(rho,theta,e_pl):
+      data = np.hstack((rho,np.sin(theta*3),e_pl))
+      data = torch.tensor(data,dtype=torch.float32)
+      with torch.no_grad():
+         out = model(data*scale_x)*scale_y
+      return out.numpy()
 
-   for i in range(theta.shape[0]):
-      x = np.array([0.0,theta[i]])
-      outNN = NR_solve(YF_NN,x)
-      rhoNN[i] = outNN
+   if not Hardening:
+      for i in range(theta.shape[0]):
+         x = np.array([0.0,theta[i]])
+         outNN = NR_solve(YF_NN,x)
+         rhoNN[i] = outNN
+   else:
+      pl_lvls = 5
+      for j in range(pl_lvls):
+         epl = j*0.02/pl_lvls
+         for i in range(theta.shape[0]):
+            x = np.array([0.0,theta[i],epl])
+            outNN = NR_solve_hard(YF_NN_hard,x)
+            rhoNN[i+j*theta.shape[0]] = outNN
    return rhoNN
+   
+   

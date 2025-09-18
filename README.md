@@ -7,8 +7,15 @@ We introduce a learning algorithm to discover neural network parameterized yield
 
 ## Setup & Examples 
 
-TODO 
+Modify the input file `input.yaml` to change the analysis settings and the material type. To run examples with perfect plasticity, set:
 
+```yaml
+Hardening: False
+```
+
+The NNs parameters and the displacement data are loaded from the **Input** folder. 
+
+To run the examples excecute `main.py`.
 
 ## Dependencies
 

@@ -77,11 +77,11 @@ def apply_grad_elu(x:float):
    return val
 
 @wp.kernel
-def Get_NN_input(sigma_n:wp.array(dtype=wp.mat33f),  # type:ignore
-                 thetas:wp.array(dtype=wp.float32),  # type:ignore
-                 scale:wp.array(dtype=wp.float32),   # type: ignore
-                 inp1:wp.array2d(dtype=wp.float32),  # type:ignore
-                 inp2:wp.array2d(dtype=wp.float32)): # type:ignore 
+def Get_NN_input_2d(sigma_n:wp.array(dtype=wp.mat33f),  # type:ignore
+                    thetas:wp.array(dtype=wp.float32),  # type:ignore
+                    scale:wp.array(dtype=wp.float32),   # type: ignore
+                    inp1:wp.array2d(dtype=wp.float32),  # type:ignore
+                    inp2:wp.array2d(dtype=wp.float32)): # type:ignore 
    
    tid = wp.tid()
    rho,theta = sig_2_rt(sigma_n[tid])
@@ -92,6 +92,26 @@ def Get_NN_input(sigma_n:wp.array(dtype=wp.mat33f),  # type:ignore
 
    inp2[0,tid] = 0.0 * scale[0]
    inp2[1,tid] = wp.sin(theta*3.0) * scale[1]
+
+@wp.kernel
+def Get_NN_input_3d(sigma_n:wp.array(dtype=wp.mat33f),  # type:ignore
+                    lamda_n:wp.array(dtype=wp.float32),  # type:ignore
+                    thetas:wp.array(dtype=wp.float32),  # type:ignore
+                    scale:wp.array(dtype=wp.float32),   # type: ignore
+                    inp1:wp.array2d(dtype=wp.float32),  # type:ignore
+                    inp2:wp.array2d(dtype=wp.float32)): # type:ignore 
+   
+   tid = wp.tid()
+   rho,theta = sig_2_rt(sigma_n[tid])
+   thetas[tid] = theta
+
+   inp1[0,tid] = rho * scale[0]
+   inp1[1,tid] = wp.sin(theta*3.0) * scale[1]
+   inp1[2,tid] = lamda_n[tid] * scale[2]
+
+   inp2[0,tid] = 0.0 * scale[0]
+   inp2[1,tid] = wp.sin(theta*3.0) * scale[1]
+   inp2[2,tid] = lamda_n[tid] * scale[2]
 
 @wp.kernel
 def run_mlp(w1:wp.array2d(dtype=wp.float32),b1:wp.array(dtype=wp.float32),          # type:ignore

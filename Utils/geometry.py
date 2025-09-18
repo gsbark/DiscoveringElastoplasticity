@@ -1,5 +1,5 @@
 import warp as wp 
-from Utils.wp_MPM import MPM_vars,MPM_state
+from Utils.wp_MPM import MPM_vars,MPM_state,MPM_state_hard
 
 '''
 Geometry functions 
@@ -60,7 +60,7 @@ def Identity3():
    return wp.diag(v)
 
 @wp.kernel
-def geometry(state:MPM_state,
+def geometry(state:MPM_state_hard,
              MPM_vars:MPM_vars,
              particles_id:wp.array(dtype=int),   # type:ignore
              gp:wp.array(dtype=wp.vec3f), # type:ignore
@@ -73,10 +73,9 @@ def geometry(state:MPM_state,
                for p in range(8):
                   ls,f = Assymetric_holes(xx+gp[p],MPM_vars)
                   if ls >0.5:
-                     v = wp.vec3f(wp.float32(0.0),wp.float32(0.0),wp.float32(0.0))
-                     
+                     #v = wp.vec3f(wp.float32(0.0),wp.float32(0.0),wp.float32(0.0))
                      state.x[0,particles_id[0]] = xx + gp[p]
-                     state.v[0,particles_id[0]] = v
+                     state.v[0,particles_id[0]] = wp.vec3f(wp.float32(0.0),wp.float32(0.0),wp.float32(0.0))
                      state.F[0,particles_id[0]] = Identity3()
                      state.L[0,particles_id[0]] = wp.mat33f()
                      state.flag[particles_id[0]] = f
