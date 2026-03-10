@@ -4,18 +4,32 @@ We introduce a learning algorithm to discover neural network parameterized yield
 
 ![Alt](docs/model.png)
 
-
 ## Setup & Examples 
 
-Modify the input file `input.yaml` to change the analysis settings and the material type. To run examples with perfect plasticity, set:
+Modify the input file `input.yaml` to change the analysis settings and the material type. 
+To run examples with **perfect plasticity**, set in `input.yaml`:
 
 ```yaml
 Hardening: False
 ```
 
-The NNs parameters and the displacement data are loaded from the **Input** folder. 
+In `MPM_inverse.py`, the constant `DIM_IN` defines the number of inputs to the neural network:
+
+- **Perfect plasticity**
+```python
+DIM_IN = wp.constant(2)
+```
+
+- **Plasticity with hardening**
+```python
+DIM_IN = wp.constant(3)
+```
+
+The neural network parameters and the displacement data are loaded from the **`Input`** directory.
 
 To run the examples excecute `main.py`.
+
+<img src="docs/example.gif" width="350">
 
 ## Dependencies
 
@@ -25,7 +39,7 @@ The following libraries are required:
 |-----------------------|--------------|
 | numpy                 | 1.25.2       |
 | torch                 | 2.0.1        |
-| nvidia-warp           | 1.6.0        |
+| nvidia-warp           | 1.11.0       |
 
 ## Citation
 

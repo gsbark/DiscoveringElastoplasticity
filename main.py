@@ -12,11 +12,7 @@ else:
 with open('input.yaml', 'r') as file:
    Inp_file = yaml.safe_load(file)
 
-MPM_for = MPM_program(**Inp_file,device=device)
-MPM_for.run_forward()
-# exit()
-
-MPM_config = MPM_program_inv(**Inp_file,device=device,w_norm=False,epochs=1000)
+MPM_config = MPM_program_inv(**Inp_file,device=device,epochs=1000)
 MPM_config.train()
 
 

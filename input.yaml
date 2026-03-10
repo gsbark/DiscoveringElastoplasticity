@@ -13,10 +13,13 @@ Material:
 Analysis_config:
   dt : 2.0e-6
   steps : 1000
-  Hardening : True           
+  Hardening : False           
 Geometry: 
   r_theta: 45 
   radius: 1.2
   length_x: 3.0
   length_y: 1.0
   length_z: 5.0
+Optimization:
+  acc_every : 10 
+  lr : 5.0e-4
