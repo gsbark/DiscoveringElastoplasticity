@@ -116,28 +116,6 @@ class MPM_vars:
       self.lamda = float((self.E*self.n)/((1.0+self.n)*(1.0-2.0*self.n)))
       self.K  = float(self.E/(3.0*(1.0-2.0*self.n)))
       
-
-
-   def reset(self):
-
-      self.out1.zero_()
-      self.out11.zero_()
-      self.z1.zero_()
-      
-      self.out2.zero_()
-      self.out22.zero_()
-      self.z2.zero_()
-
-      self.out3.zero_()
-      self.out33.zero_()
-      self.f_val.zero_()
-      self.f_max.zero_()
-
-      self.z2z1.zero_()
-      self.w3_exp.zero_()
-      self.df_dx.zero_()
-      self.df_dx_true.zero_()
-
 @wp.kernel
 def p2g(
     MPM:MPM_vars,
