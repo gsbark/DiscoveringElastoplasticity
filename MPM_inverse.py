@@ -67,7 +67,7 @@ class MPM_program_inv:
 
         self.mlp_inp1 = wp.zeros((self.acc_every,dim,self.num_particles),dtype=wp.float32,requires_grad=True,device=device)
         self.mlp_inp2 = wp.zeros((self.acc_every,dim,self.num_particles),dtype=wp.float32,requires_grad=True,device=device)
-        self.wp_mlp = wp_MLP(torch_weights,self.num_particles,self.acc_every,batch_size=self.num_particles,device=device)        
+        self.wp_mlp = wp_MLP(torch_weights,self.num_particles,self.acc_every,device=device)        
         self.loss_arr = wp.zeros((1), dtype=wp.float32,requires_grad=True,device=device)
 
         #Custom Gradients arrays to accumulate gradients 
