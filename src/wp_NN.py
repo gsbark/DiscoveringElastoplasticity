@@ -4,7 +4,7 @@ from torch import Tensor
 from src.wp_helpers import *
 
 class wp_MLP:
-   def __init__(self,params:Tensor,batch:int,steps:int,batch_size:int,device):
+   def __init__(self,params:Tensor,batch:int,steps:int,device):
 
       self.w1 = wp.array(params['layers.0.weight'].numpy(),dtype=wp.float32,requires_grad=True,device=device)
       self.b1 = wp.array(params['layers.0.bias'].numpy()[:,None],dtype=wp.float32,requires_grad=True,device=device)
